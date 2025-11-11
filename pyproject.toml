@@ -1,16 +1,28 @@
 [project]
-name = "pydra"
+name = "pydraconf"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python-native hierarchical configuration management with Pydantic"
 readme = "README.md"
 authors = [
-    { name = "aigoncharov", email = "andrey@faillearnrepeat.net" }
+    { name = "Andrey Goncharov", email = "andrey@faillearnrepeat.net" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 dependencies = [
-    "pydantic>=2.12.4",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "mypy>=1.5",
+    "ruff>=0.1",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+]
