@@ -76,11 +76,11 @@ def load_config_dirs(start_path: Path | None = None) -> list[str] | None:
 
     Example pyproject.toml:
         [tool.pydraconf]
-        config_dirs = ["$CWD/configs", "$ROOT/configs", "configs"]
+        config_dirs = ["$ROOT/configs", "$CWD/configs", "configs"]
 
     Example .pydraconfrc:
         {
-            "config_dirs": ["$CWD/configs", "$ROOT/configs", "configs"]
+            "config_dirs": ["$ROOT/configs", "$CWD/configs", "configs"]
         }
     """
     if start_path is None:

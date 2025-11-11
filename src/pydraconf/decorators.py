@@ -103,7 +103,7 @@ def provide_config(
                     If None, will search for config_dirs in:
                     1. .pydraconfrc (JSON) in current/parent directories
                     2. pyproject.toml [tool.pydraconf] section
-                    3. Defaults to ["$CWD/configs", "$ROOT/configs", "configs"]
+                    3. Defaults to ["$ROOT/configs", "$CWD/configs", "configs"]
 
                     Supports variable substitution:
                     - $CWD: Current working directory
@@ -162,8 +162,8 @@ def provide_config(
                 if loaded_dirs:
                     resolved_config_dirs = loaded_dirs
                 else:
-                    # Default: try CWD first, then ROOT, then relative to script
-                    resolved_config_dirs = ["$CWD/configs", "$ROOT/configs", "configs"]
+                    # Default: try ROOT first, then CWD, then relative to script
+                    resolved_config_dirs = ["$ROOT/configs", "$CWD/configs", "configs"]
 
             # Substitute variables and resolve paths
             resolved_paths: list[Path] = []
@@ -178,12 +178,12 @@ def provide_config(
 
                 resolved_paths.append(path)
 
-            # 1. Discover configs from all directories (first directory has priority)
+            # 1. Discover configs from all directories
+            # Later directories override earlier ones (rightmost has highest priority)
             registry = ConfigRegistry()
             for config_path in resolved_paths:
                 if config_path.exists():
                     registry.discover(config_path)
-                    break  # Use first existing directory
 
             # 2. Parse CLI
             parser = ConfigCLIParser(config_cls, registry)

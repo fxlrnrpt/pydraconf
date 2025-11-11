@@ -179,11 +179,11 @@ def train(cfg):
 ```
 
 By default, PydraConf searches in this order:
-1. `$CWD/configs` - Current working directory
-2. `$ROOT/configs` - Project root (directory with `pyproject.toml` or `.pydraconfrc`)
+1. `$ROOT/configs` - Project root (directory with `pyproject.toml` or `.pydraconfrc`)
+2. `$CWD/configs` - Current working directory
 3. `configs` - Relative to the script directory
 
-The first existing directory wins.
+**Config discovery and shadowing**: PydraConf discovers configs from ALL existing directories. Configs in later directories (rightmost) override configs with the same name from earlier directories. For example, if both `$ROOT/configs` and`$CWD/configs`  have a `model/resnet.py`, the one from `$CWD/configs` (rightmost) wins.
 
 ### Option 2: Config files (recommended for projects)
 
@@ -231,7 +231,7 @@ def train(cfg):
     ...
 
 # Multiple directories with priority
-@provide_config(TrainConfig, config_dirs=["$CWD/configs", "$ROOT/shared_configs"])
+@provide_config(TrainConfig, config_dirs=["$ROOT/shared_configs", "$CWD/configs"])
 def train(cfg):
     ...
 ```
@@ -240,7 +240,7 @@ def train(cfg):
 1. Explicit `config_dirs` argument (if provided)
 2. `.pydraconfrc` in current/parent directories
 3. `[tool.pydraconf]` in `pyproject.toml`
-4. Default to `["$CWD/configs", "$ROOT/configs", "configs"]`
+4. Default to `["$ROOT/configs", "$CWD/configs", "configs"]`
 
 ## Examples
 
@@ -269,9 +269,10 @@ def my_function(cfg: ConfigClass):
 - `config_dirs`: Directory or list of directories containing config files. If `None`, searches for:
   1. `.pydraconfrc` (JSON) in current/parent directories
   2. `[tool.pydraconf]` section in `pyproject.toml`
-  3. Defaults to `["$CWD/configs", "$ROOT/configs", "configs"]` if not found
+  3. Defaults to `["$ROOT/configs", "$CWD/configs", "configs"]` if not found
 
-  When multiple directories are provided, the first existing directory is used.
+  When multiple directories are provided, configs are discovered from ALL existing directories.
+  Configs in later directories (rightmost) override configs with the same name from earlier directories.
 
   Supports variable substitution:
   - `$CWD` - Current working directory
@@ -292,14 +293,14 @@ def my_function(cfg: ConfigClass):
 `.pydraconfrc` (JSON):
 ```json
 {
-  "config_dirs": ["$CWD/configs", "$ROOT/shared_configs", "configs"]
+  "config_dirs": ["$ROOT/shared_configs", "$CWD/configs", "configs"]
 }
 ```
 
 `pyproject.toml`:
 ```toml
 [tool.pydraconf]
-config_dirs = ["$CWD/configs", "$ROOT/shared_configs", "configs"]
+config_dirs = ["$ROOT/shared_configs", "$CWD/configs", "configs"]
 ```
 
 ### `ConfigRegistry`

@@ -1,0 +1,7 @@
+{
+  "config_dirs": [
+    "shared_configs",
+    "user_configs",
+    "configs"
+  ]
+}
