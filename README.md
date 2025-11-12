@@ -3,6 +3,7 @@
 Python-native hierarchical configuration management with Pydantic. Like Hydra, but for YAML-haters.
 
 **Key features** 🎯:
+
 - Pure Python - no YAML, no magic strings
 - Type-safe with Pydantic validation
 - IDE autocomplete and refactoring support
@@ -16,6 +17,30 @@ Three **powerful override mechanisms** work together 🍻:
 2. **Groups** - Component swapping via type inheritance (e.g., `model=ViTConfig`)
 3. **CLI Overrides** - Runtime field tweaks (e.g., `--epochs=50`)
 
+- [PydraConf](#pydraconf)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [How It Works](#how-it-works)
+    - [1. Variants - Named Configurations](#1-variants---named-configurations)
+      - [Setting a Default Variant](#setting-a-default-variant)
+    - [2. Groups - Component Swapping](#2-groups---component-swapping)
+    - [3. CLI Overrides - Runtime Tweaks](#3-cli-overrides---runtime-tweaks)
+    - [4. Override Priority](#4-override-priority)
+  - [Configuration Directory](#configuration-directory)
+    - [Option 1: Use the default](#option-1-use-the-default)
+    - [Option 2: Config files (recommended for projects)](#option-2-config-files-recommended-for-projects)
+    - [Option 3: Explicit argument](#option-3-explicit-argument)
+  - [Examples](#examples)
+  - [API Reference](#api-reference)
+    - [`@with_config`](#with_config)
+    - [`ConfigRegistry`](#configregistry)
+    - [`PydraConfig`](#pydraconfig)
+    - [`configure_logging`](#configure_logging)
+  - [Development](#development)
+  - [Comparison with Hydra](#comparison-with-hydra)
+  - [License](#license)
+  - [Contributing](#contributing)
+  - [Credits](#credits)
 
 ## Installation
 
@@ -223,6 +248,7 @@ python train.py --config=quick-test model=ViTConfig --epochs=10
 ```
 
 Results in:
+
 - `epochs=10` (CLI override, highest priority)
 - `model=ViTConfig(...)` (config group selection)
 - Other fields from QuickTest variant defaults
@@ -252,6 +278,7 @@ def train(cfg: TrainConfig):
 ```
 
 By default, PydraConf searches in this order:
+
 1. `$ROOT/configs` - Project root (directory with `pyproject.toml` or `.pydraconfrc`)
 2. `$CWD/configs` - Current working directory
 3. `configs` - Relative to the script directory
@@ -263,6 +290,7 @@ By default, PydraConf searches in this order:
 Create a `.pydraconfrc` (JSON) or add to `pyproject.toml`:
 
 **.pydraconfrc:**
+
 ```json
 {
   "config_dirs": ["$ROOT/shared_configs", "$CWD/configs"]
@@ -270,6 +298,7 @@ Create a `.pydraconfrc` (JSON) or add to `pyproject.toml`:
 ```
 
 **pyproject.toml:**
+
 ```toml
 [tool.pydraconf]
 config_dirs = ["$ROOT/shared_configs", "$CWD/configs"]
@@ -286,10 +315,12 @@ def train(cfg: TrainConfig):
 Config files are searched in current and parent directories, making this great for monorepos.
 
 **Variable substitution:**
+
 - `$CWD` - Current working directory
 - `$ROOT` - Project root (directory with `pyproject.toml` or `.pydraconfrc`)
 
 **Path resolution:**
+
 - Relative paths (without variables) are resolved relative to the script directory
 - Example: `"configs"` resolves to `{script_dir}/configs`
 
@@ -310,6 +341,7 @@ def train(cfg: TrainConfig):
 ```
 
 **Resolution priority:**
+
 1. Explicit `config_dirs` argument (if provided)
 2. `.pydraconfrc` in current/parent directories
 3. `[tool.pydraconf]` in `pyproject.toml`
@@ -360,6 +392,7 @@ def my_function(cfg: ConfigClass):
   Relative paths (without variables) are resolved relative to the script directory.
 
 **The decorator:**
+
 1. Resolves `config_dirs` from config files or arguments
 2. Substitutes variables and resolves paths
 3. Discovers all configs in the first existing directory
@@ -370,6 +403,7 @@ def my_function(cfg: ConfigClass):
 **Config File Format:**
 
 `.pydraconfrc` (JSON):
+
 ```json
 {
   "config_dirs": ["$ROOT/shared_configs", "$CWD/configs", "configs"]
@@ -377,6 +411,7 @@ def my_function(cfg: ConfigClass):
 ```
 
 `pyproject.toml`:
+
 ```toml
 [tool.pydraconf]
 config_dirs = ["$ROOT/shared_configs", "$CWD/configs", "configs"]
@@ -412,6 +447,7 @@ model_cls = registry.get_group("model", "ViTConfig")
 Enhanced configuration base class that extends Pydantic's `BaseModel` with automatic override tracking and metadata capabilities.
 
 **When to use:**
+
 - Use `PydraConfig` for your main configuration classes (the ones passed to `@with_config`)
 - Use Pydantic's `BaseModel` for nested config groups (optional, both work)
 
@@ -470,6 +506,7 @@ config.export_config("config.json", include_metadata=False)
 ```
 
 Exported JSON structure (with metadata):
+
 ```json
 {
   "config": {
@@ -511,6 +548,7 @@ config.log_summary()
 ```
 
 Output:
+
 ```
 INFO - pydraconf - Configuration: TrainConfig
 INFO - pydraconf - Variant: QuickTest
@@ -566,6 +604,7 @@ configure_logging(
 ```
 
 **Arguments:**
+
 - `level`: Log level ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 - `handlers`: Can be:
   - `None`: Uses default StreamHandler to stdout with default format
@@ -580,14 +619,14 @@ git clone https://github.com/yourusername/pydraconf.git
 cd pydraconf
 uv sync --dev
 
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Linting and formatting
+uv run pre-commit run --all-files
+
 # Run tests
 uv run pytest
-
-# Type checking
-uv run mypy src/pydraconf --strict
-
-# Linting
-uv run ruff check src/pydraconf
 ```
 
 ## Comparison with Hydra
@@ -602,12 +641,14 @@ uv run ruff check src/pydraconf
 | File Format | .py | .yaml |
 
 PydraConf is ideal if you:
+
 - Prefer Python over YAML
 - Want full type safety and IDE support
 - Need simple hierarchical configs
 - Value convention over configuration
 
 Consider Hydra if you need:
+
 - Complex multi-run experiments
 - Job launchers for clusters
 - Extensive plugin ecosystem
@@ -619,6 +660,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Contributing
 
 Contributions welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Add tests for new functionality
