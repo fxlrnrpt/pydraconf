@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from configs.base import FullTraining, QuickTest, TrainConfig
 
-from pydraconf import provide_config
+from pydraconf import with_config
 
 
 def run_training(cfg: TrainConfig) -> None:
@@ -71,7 +71,7 @@ def run_training(cfg: TrainConfig) -> None:
     # cfg.export_config("training_config.json")
 
 
-@provide_config()  # config_dirs read from .pydraconfrc
+@with_config()  # config_dirs read from .pydraconfrc
 def train(cfg: TrainConfig) -> None:
     """Standard training entry point - flexible configuration.
 
@@ -84,7 +84,7 @@ def train(cfg: TrainConfig) -> None:
     run_training(cfg)
 
 
-@provide_config(config_cls=QuickTest)
+@with_config(config_cls=QuickTest)
 def train_dev(cfg: TrainConfig) -> None:
     """Development entry point - always uses QuickTest config.
 
@@ -98,7 +98,7 @@ def train_dev(cfg: TrainConfig) -> None:
     run_training(cfg)
 
 
-@provide_config(config_cls=FullTraining)
+@with_config(config_cls=FullTraining)
 def train_prod(cfg: TrainConfig) -> None:
     """Production entry point - always uses FullTraining config.
 

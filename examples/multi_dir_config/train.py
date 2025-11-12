@@ -8,10 +8,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from shared_configs.base import TrainConfig
 
-from pydraconf import provide_config
+from pydraconf import with_config
 
 
-@provide_config()  # config_dirs read from .pydraconfrc
+@with_config()  # config_dirs read from .pydraconfrc
 def train(cfg: TrainConfig) -> None:
     """Run training with the given config.
 

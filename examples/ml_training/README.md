@@ -96,7 +96,7 @@ python train.py train-dev model=TinyModel --epochs=3
 python train.py train-prod model=ResNet50Config optimizer=AdamConfig --batch_size=128
 ```
 
-**What happened?** The `config_cls` parameter in `@provide_config()` sets a fixed default variant. Great for:
+**What happened?** The `config_cls` parameter in `@with_config()` sets a fixed default variant. Great for:
 - CI/CD pipelines (ensure prod always uses prod config)
 - Team workflows (devs use dev mode, ops use prod mode)
 - Reproducibility (fixed baseline with optional tweaks)

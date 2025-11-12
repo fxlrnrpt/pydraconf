@@ -6,7 +6,7 @@ Python-native hierarchical configuration management with Pydantic. Like Hydra, b
 - Pure Python - no YAML, no magic strings
 - Type-safe with Pydantic validation
 - IDE autocomplete and refactoring support
-- Simple `@provide_config` decorator
+- Run with a single `@with_config` decorator
 - Type-driven architecture - groups are defined by class inheritance, not directory structure
 - Built-in override tracking and config metadata
 
@@ -28,7 +28,7 @@ pip install pydraconf
 Create a simple config and use the decorator:
 
 ```python
-from pydraconf import PydraConfig, provide_config
+from pydraconf import PydraConfig, with_config
 
 class TrainConfig(PydraConfig):
     epochs: int = 100
@@ -37,7 +37,7 @@ class TrainConfig(PydraConfig):
 class QuickTest(TrainConfig):
     epochs: int = 5
 
-@provide_config()
+@with_config()
 def train(cfg: TrainConfig):
     # Prints applied configuration and overrides
     cfg.log_summary()
@@ -74,7 +74,7 @@ python train.py --config=QuickTest --epochs=10
 Or set a different default variant:
 
 ```python
-@provide_config(config_cls=QuickTest)
+@with_config(config_cls=QuickTest)
 def train(cfg: TrainConfig):
     ...
 ```
@@ -115,7 +115,7 @@ You can specify a default variant by passing `config_cls` to the decorator. This
 
 ```python
 # Use QuickTest as default variant
-@provide_config(config_cls=QuickTest)
+@with_config(config_cls=QuickTest)
 def train(cfg: TrainConfig):
     print(f"Training for {cfg.epochs} epochs")
 
@@ -138,11 +138,11 @@ if __name__ == "__main__":
 
 ```python
 # Different entry points with different configs
-@provide_config(config_cls=ProductionConfig)
+@with_config(config_cls=ProductionConfig)
 def train_prod(cfg: TrainConfig):
     ...
 
-@provide_config(config_cls=QuickTest)
+@with_config(config_cls=QuickTest)
 def train_dev(cfg: TrainConfig):
     ...
 ```
@@ -246,7 +246,7 @@ my_project/
 ```
 
 ```python
-@provide_config()  # Searches default locations
+@with_config()  # Searches default locations
 def train(cfg: TrainConfig):
     ...
 ```
@@ -278,7 +278,7 @@ config_dirs = ["$ROOT/shared_configs", "$CWD/configs"]
 Then use the decorator without arguments:
 
 ```python
-@provide_config()  # Reads from config file
+@with_config()  # Reads from config file
 def train(cfg: TrainConfig):
     ...
 ```
@@ -299,12 +299,12 @@ Pass `config_dirs` directly to the decorator (single or multiple directories):
 
 ```python
 # Single directory (relative to script)
-@provide_config(config_dirs="my_configs")
+@with_config(config_dirs="my_configs")
 def train(cfg: TrainConfig):
     ...
 
 # Multiple directories with priority
-@provide_config(config_dirs=["$ROOT/shared_configs", "$CWD/configs"])
+@with_config(config_dirs=["$ROOT/shared_configs", "$CWD/configs"])
 def train(cfg: TrainConfig):
     ...
 ```
@@ -324,12 +324,12 @@ See the [`examples/`](examples/) directory:
 
 ## API Reference
 
-### `@provide_config`
+### `@with_config`
 
 Decorator to make a function config-driven. The config class is automatically inferred from the function's first parameter type annotation, or can be explicitly specified.
 
 ```python
-@provide_config(
+@with_config(
     config_cls: Type[BaseModel] | None = None,  # Optional explicit config class
     config_dirs: str | list[str] | None = None   # Directory or directories to scan
 )
@@ -412,7 +412,7 @@ model_cls = registry.get_group("model", "ViTConfig")
 Enhanced configuration base class that extends Pydantic's `BaseModel` with automatic override tracking and metadata capabilities.
 
 **When to use:**
-- Use `PydraConfig` for your main configuration classes (the ones passed to `@provide_config`)
+- Use `PydraConfig` for your main configuration classes (the ones passed to `@with_config`)
 - Use Pydantic's `BaseModel` for nested config groups (optional, both work)
 
 ```python

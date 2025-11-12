@@ -104,7 +104,7 @@ def _build_config(
     return config
 
 
-def provide_config(
+def with_config(
     config_cls: Type[T] | None = None,
     config_dirs: str | list[str] | None = None,
 ) -> Callable[[Callable[[T], Any]], Callable[[], Any]]:
@@ -140,22 +140,22 @@ def provide_config(
 
     Example:
         # With explicit config_dirs
-        @provide_config(config_dirs="configs")
+        @with_config(config_dirs="configs")
         def train(cfg: TrainConfig):
             print(f"Training for {cfg.epochs} epochs")
 
         # With multiple directories
-        @provide_config(config_dirs=["$CWD/configs", "configs"])
+        @with_config(config_dirs=["$CWD/configs", "configs"])
         def train(cfg: TrainConfig):
             print(f"Training for {cfg.epochs} epochs")
 
         # Using config file (.pydraconfrc or pyproject.toml)
-        @provide_config()
+        @with_config()
         def train(cfg: TrainConfig):
             print(f"Training for {cfg.epochs} epochs")
 
         # With explicit config class (must be subclass of type annotation)
-        @provide_config(config_cls=QuickTestConfig)
+        @with_config(config_cls=QuickTestConfig)
         def train(cfg: TrainConfig):  # QuickTestConfig must be subclass of TrainConfig
             print(f"Training for {cfg.epochs} epochs")
     """

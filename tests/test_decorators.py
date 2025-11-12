@@ -1,4 +1,4 @@
-"""Tests for the provide_config decorator."""
+"""Tests for the with_config decorator."""
 
 import sys
 from unittest.mock import patch
@@ -7,7 +7,7 @@ import pytest
 from pydantic import BaseModel, Field
 
 from pydraconf.base_config import PydraConfig
-from pydraconf.decorators import provide_config
+from pydraconf.decorators import with_config
 
 
 class BaseTestConfig(PydraConfig):
@@ -30,12 +30,12 @@ class UnrelatedConfig(BaseModel):
 
 
 class TestProvideConfigDecorator:
-    """Test the provide_config decorator."""
+    """Test the with_config decorator."""
 
     def test_decorator_infers_config_from_type_annotation(self, tmp_path):
         """Test that decorator infers config class from function parameter."""
 
-        @provide_config(config_dirs=str(tmp_path))
+        @with_config(config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -48,7 +48,7 @@ class TestProvideConfigDecorator:
     def test_decorator_with_explicit_config_cls(self, tmp_path):
         """Test providing explicit config_cls parameter."""
 
-        @provide_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
+        @with_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -63,7 +63,7 @@ class TestProvideConfigDecorator:
         """Test that explicit config_cls must be subclass of type annotation."""
         with pytest.raises(TypeError, match="must be a subclass of"):
 
-            @provide_config(config_cls=UnrelatedConfig, config_dirs=str(tmp_path))  # type: ignore[arg-type]
+            @with_config(config_cls=UnrelatedConfig, config_dirs=str(tmp_path))  # type: ignore[arg-type]
             def my_func(cfg: BaseTestConfig):
                 return cfg
 
@@ -72,7 +72,7 @@ class TestProvideConfigDecorator:
         # Should raise immediately when decorator is applied, not when function is called
         with pytest.raises(TypeError, match="must be a subclass of"):
 
-            @provide_config(config_cls=UnrelatedConfig, config_dirs=str(tmp_path))  # type: ignore[arg-type]
+            @with_config(config_cls=UnrelatedConfig, config_dirs=str(tmp_path))  # type: ignore[arg-type]
             def my_func(cfg: BaseTestConfig):
                 return cfg
 
@@ -82,7 +82,7 @@ class TestProvideConfigDecorator:
     def test_explicit_config_cls_with_cli_overrides(self, tmp_path):
         """Test that CLI overrides work with explicit config_cls."""
 
-        @provide_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
+        @with_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -96,7 +96,7 @@ class TestProvideConfigDecorator:
     def test_none_config_cls_uses_type_annotation(self, tmp_path):
         """Test that config_cls=None (default) uses type annotation."""
 
-        @provide_config(config_cls=None, config_dirs=str(tmp_path))
+        @with_config(config_cls=None, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -109,7 +109,7 @@ class TestProvideConfigDecorator:
     def test_config_cls_does_not_prevent_cli_overrides(self, tmp_path):
         """Test that CLI overrides still work with explicit config_cls."""
 
-        @provide_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
+        @with_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -132,7 +132,7 @@ class TestProvideConfigDecorator:
         3. CLI parameters are based on the type annotation's fields
         """
 
-        @provide_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
+        @with_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -153,7 +153,7 @@ class TestProvideConfigDecorator:
         """Test that missing type annotation raises TypeError."""
         with pytest.raises(TypeError, match="must have type hints for its first parameter"):
 
-            @provide_config(config_dirs=str(tmp_path))
+            @with_config(config_dirs=str(tmp_path))
             def my_func(cfg):  # No type hint
                 return cfg
 
@@ -161,7 +161,7 @@ class TestProvideConfigDecorator:
         """Test that non-BaseModel type annotation raises TypeError."""
         with pytest.raises(TypeError, match="must be a Pydraconf's PydraConfig"):
 
-            @provide_config(config_dirs=str(tmp_path))  # pyright: ignore[reportArgumentType]
+            @with_config(config_dirs=str(tmp_path))  # pyright: ignore[reportArgumentType]
             def my_func(cfg: int):  # Not a BaseModel
                 return cfg
 
@@ -169,7 +169,7 @@ class TestProvideConfigDecorator:
         """Test that config_cls is the first parameter."""
 
         # Should work with positional argument
-        @provide_config(DerivedConfig, str(tmp_path))
+        @with_config(DerivedConfig, str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -182,7 +182,7 @@ class TestProvideConfigDecorator:
     def test_config_dirs_still_works_as_keyword(self, tmp_path):
         """Test that config_dirs can still be used as keyword argument."""
 
-        @provide_config(config_dirs=str(tmp_path))
+        @with_config(config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -195,7 +195,7 @@ class TestProvideConfigDecorator:
     def test_both_parameters_as_keywords(self, tmp_path):
         """Test using both parameters as keyword arguments."""
 
-        @provide_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
+        @with_config(config_cls=DerivedConfig, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -222,7 +222,7 @@ class TestConfigClsWithNestedFields:
         class FastTrain(TrainConfig):
             epochs: int = 10
 
-        @provide_config(config_cls=FastTrain, config_dirs=str(tmp_path))
+        @with_config(config_cls=FastTrain, config_dirs=str(tmp_path))
         def train(cfg: TrainConfig):
             return cfg
 
@@ -241,7 +241,7 @@ class TestConfigClsInheritance:
     def test_exact_type_is_valid_subclass(self, tmp_path):
         """Test that using the exact same type as annotation is valid."""
 
-        @provide_config(config_cls=BaseTestConfig, config_dirs=str(tmp_path))
+        @with_config(config_cls=BaseTestConfig, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 
@@ -260,7 +260,7 @@ class TestConfigClsInheritance:
             level2_value: int = 40
 
         # Should work - Level2Config is subclass of DerivedConfig which is subclass of BaseTestConfig
-        @provide_config(config_cls=Level2Config, config_dirs=str(tmp_path))
+        @with_config(config_cls=Level2Config, config_dirs=str(tmp_path))
         def my_func(cfg: BaseTestConfig):
             return cfg
 

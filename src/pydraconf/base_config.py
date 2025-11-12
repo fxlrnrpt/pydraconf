@@ -30,7 +30,7 @@ class PydraConfig(BaseModel):
         class QuickTest(TrainConfig):
             epochs: int = 5
 
-        @provide_config()
+        @with_config()
         def train(cfg: TrainConfig):
             # Access metadata
             metadata = cfg.get_metadata()
@@ -66,7 +66,7 @@ class PydraConfig(BaseModel):
         """
         Set metadata about the configuration and its overrides.
 
-        This method is called internally by the @provide_config decorator.
+        This method is called internally by the @with_config decorator.
 
         Args:
             config_name: Name of the config class being used

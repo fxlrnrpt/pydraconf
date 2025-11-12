@@ -7,7 +7,7 @@ Supports three override mechanisms:
 3. CLI Overrides - Runtime tweaks (e.g., --epochs=50)
 
 Example:
-    from pydraconf import PydraConfig, provide_config
+    from pydraconf import PydraConfig, with_config
 
     class TrainConfig(PydraConfig):
         epochs: int = 100
@@ -15,7 +15,7 @@ Example:
     class QuickTest(TrainConfig):
         epochs: int = 5
 
-    @provide_config(config_dirs="configs")
+    @with_config(config_dirs="configs")
     def train(cfg: TrainConfig):
         print(f"Training for {cfg.epochs} epochs")
 
@@ -23,7 +23,7 @@ Example:
 """
 
 from .base_config import PydraConfig
-from .decorators import provide_config
+from .decorators import with_config
 from .logger import configure_logging
 from .registry import ConfigRegistry
 
@@ -31,7 +31,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     "PydraConfig",
-    "provide_config",
+    "with_config",
     "ConfigRegistry",
     "configure_logging",
 ]
