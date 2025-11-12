@@ -38,26 +38,26 @@ class ConfigCLIParser:
 
     def _build_parser(self) -> None:
         """Build argument parser with all config options."""
-        # Add --config for variant selection
         variants = self.registry.list_variants()
 
-        if variants:
-            self.parser.add_argument(
-                "--config",
-                type=str,
-                choices=variants,
-                help=f"Select config variant. Available: {', '.join(variants)}",
-            )
+        self.parser.add_argument(
+            "--config",
+            type=str,
+            choices=variants,
+            help="Select config variant",
+        )
 
-        # Add --help-groups to show available groups
-        groups = self.registry.list_groups()
-        if groups:
-            group_help = "\n".join(f"  {group}: {', '.join(configs)}" for group, configs in groups.items())
-            self.parser.add_argument(
-                "--help-groups",
-                action="store_true",
-                help=f"Show available config groups:\n{group_help}",
-            )
+        self.parser.add_argument(
+            "--list-groups",
+            action="store_true",
+            help="Show available config groups",
+        )
+
+        self.parser.add_argument(
+            "--list-variants",
+            action="store_true",
+            help="Show available config variants",
+        )
 
         # Add field arguments recursively
         self._add_field_arguments(self.config_cls, prefix="")
@@ -188,12 +188,26 @@ class ConfigCLIParser:
         # Parse regular arguments
         parsed = self.parser.parse_args(regular_args)
 
-        # Handle --help-groups
-        if hasattr(parsed, "help_groups") and parsed.help_groups:
+        # Handle --list-variants
+        if hasattr(parsed, "list_variants") and parsed.list_variants:
+            variants = self.registry.list_variants()
+            print("Available config variants:")
+            for variant in variants:
+                print(f"  {variant}")
+            if not variants:
+                print("  None")
+            import sys
+
+            sys.exit(0)
+
+        # Handle --list-groups
+        if hasattr(parsed, "list_groups") and parsed.list_groups:
             groups = self.registry.list_groups()
             print("Available config groups:")
             for group, configs in groups.items():
                 print(f"  {group}: {', '.join(configs)}")
+            if not groups:
+                print("  None")
             import sys
 
             sys.exit(0)
@@ -210,7 +224,7 @@ class ConfigCLIParser:
         # Extract field overrides
         field_overrides: dict[str, Any] = {}
         for key, value in vars(parsed).items():
-            if key in ("config", "help_groups") or value is None:
+            if key in ("config", "list_groups", "list_variants") or value is None:
                 continue
             # Store with dot notation for nested fields (key already has correct format)
             field_overrides[key] = value

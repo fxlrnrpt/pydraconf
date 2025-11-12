@@ -39,6 +39,7 @@ Three **powerful override mechanisms** work together 🍻:
     - [`ConfigRegistry`](#configregistry)
     - [`PydraConfig`](#pydraconfig)
     - [`configure_logging`](#configure_logging)
+  - [CLI Reference](#cli-reference)
   - [Development](#development)
   - [Comparison with Hydra](#comparison-with-hydra)
   - [License](#license)
@@ -615,6 +616,20 @@ configure_logging(
   - `None`: Uses default StreamHandler to stdout with default format
   - Single handler: Uses provided handler with default format
   - List of `(handler, format)` tuples: Each handler uses its own format (use `None` for default)
+
+## CLI Reference
+
+List available configuration options:
+
+```bash
+# Show all available variants
+python train.py --list-variants
+
+# Show all available groups and their configs
+python train.py --list-groups
+```
+
+These commands display the available options and exit, making it easy to discover what configurations you can use.
 
 ## Development
 
