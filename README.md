@@ -138,7 +138,7 @@ python train.py --config=QuickTest   # Uses QuickTest
 python train.py --config=Production  # Uses Production
 ```
 
-**How it works:** PydraConf discovers all direct subclasses of your main config class (the one used in your `train` function) and registers them as variants.
+**How it works:** PydraConf discovers all subclassess of your main config class (the one used in your `train` function) and registers them as variants.
 
 #### Setting a Default Variant
 
@@ -445,7 +445,7 @@ model_cls = registry.get_group("model", "ViTConfig")
 **Key points:**
 
 - `discover()` requires the main config class to identify variants and groups
-- **Variants** are direct subclasses of the main config
+- **Variants** are subclassess of the main config
 - **Groups** are subclasses of nested field types in the main config
 
 ### `PydraConfig`

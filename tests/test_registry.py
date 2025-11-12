@@ -32,7 +32,7 @@ class TestConfigRegistry:
 
     def test_discover_variants(self, registry, fixtures_path):
         """Test discovering variant configs (subclasses of main config)."""
-        # BaseTestConfig is the main config - should find its direct subclasses
+        # BaseTestConfig is the main config - should find its subclassess
         registry.discover(fixtures_path, BaseTestConfig)
         variants = registry.list_variants()
 
