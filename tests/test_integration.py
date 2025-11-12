@@ -72,7 +72,7 @@ class TestIntegration:
 
     def test_group_selection(self, registry):
         """Test building config with group selection."""
-        config = _build_config(TrainConfig, registry, {"model": "small"}, {})
+        config = _build_config(TrainConfig, registry, {"model": "SmallModelConfig"}, {})
 
         assert isinstance(config, TrainConfig)
         # Model should be swapped to SmallModelConfig
@@ -98,7 +98,7 @@ class TestIntegration:
     def test_all_three_override_types(self, registry):
         """Test building config with variant + groups + overrides."""
         variant_cls = QuickTest
-        groups = {"model": "large"}
+        groups = {"model": "LargeModelConfig"}
         overrides = {"epochs": 10, "model.size": 2000}
 
         config = _build_config(variant_cls, registry, groups, overrides)
@@ -120,11 +120,11 @@ class TestIntegration:
 
         # Base: epochs=100
         # Variant (QuickTest): epochs=5
-        # Group: model=small (size=100, layers=2)
+        # Group: model=SmallModelConfig (size=100, layers=2)
         # CLI: epochs=15, model.layers=5
 
         config = cast(
-            QuickTest, _build_config(QuickTest, registry, {"model": "small"}, {"epochs": 15, "model.layers": 5})
+            QuickTest, _build_config(QuickTest, registry, {"model": "SmallModelConfig"}, {"epochs": 15, "model.layers": 5})
         )
 
         # epochs from CLI override (highest priority)
@@ -147,9 +147,9 @@ class TestIntegration:
             optimizer: BaseModel = Field(default_factory=OptimizerConfig)
 
         # Register optimizer group
-        registry.register_group("optimizer", "sgd", OptimizerConfig)
+        registry.register_group("optimizer", "OptimizerConfig", OptimizerConfig)
 
-        config = cast(FullConfig, _build_config(FullConfig, registry, {"model": "small", "optimizer": "sgd"}, {}))
+        config = cast(FullConfig, _build_config(FullConfig, registry, {"model": "SmallModelConfig", "optimizer": "OptimizerConfig"}, {}))
 
         assert isinstance(config.model, SmallModelConfig)
         assert config.model.__class__.__name__ == "SmallModelConfig"
@@ -159,7 +159,7 @@ class TestIntegration:
     def test_end_to_end_with_cli_parser(self, registry):
         """Test complete end-to-end flow with CLI parser."""
         parser = ConfigCLIParser(TrainConfig, registry)
-        variant_name, groups, overrides = parser.parse(["--epochs=50", "model=small"])
+        variant_name, groups, overrides = parser.parse(["--epochs=50", "model=SmallModelConfig"])
 
         # variant_name should be None (no --config specified)
         assert variant_name is None

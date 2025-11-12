@@ -15,9 +15,9 @@ class ConfigCLIParser:
     """Parser for config CLI arguments.
 
     Supports three types of arguments:
-    1. --config=variant-name (select named variant)
-    2. group=name (swap config group, e.g., model=vit)
-    3. --field.nested=value (override specific fields)
+    1. --config=VariantClassName (select named variant using class name)
+    2. group=ClassName (swap config group using class name, e.g., model=ViTConfig)
+    3. --field.nested=value (override specific fields using exact field names)
     """
 
     def __init__(self, config_cls: Type[BaseModel], registry: ConfigRegistry) -> None:
@@ -69,7 +69,7 @@ class ConfigCLIParser:
         """
         for field_name, field_info in model.model_fields.items():
             field_type = field_info.annotation
-            arg_name = f"{prefix}{field_name}".replace("_", "-")
+            arg_name = f"{prefix}{field_name}"
 
             # Handle nested BaseModel
             origin = get_origin(field_type)
@@ -160,8 +160,8 @@ class ConfigCLIParser:
 
         Returns:
             Tuple of (config_variant, group_selections, field_overrides)
-            - config_variant: Selected variant name (--config=X)
-            - group_selections: Component swaps {"model": "vit"}
+            - config_variant: Selected variant name (--config=VariantClassName)
+            - group_selections: Component swaps using class names {"model": "ViTConfig"}
             - field_overrides: Field changes {"epochs": 50, "model.hidden_dim": 1024}
         """
         # Separate group selections from regular args
@@ -210,9 +210,7 @@ class ConfigCLIParser:
         for key, value in vars(parsed).items():
             if key in ("config", "help_groups") or value is None:
                 continue
-            # Convert kebab-case back to snake_case and dots for nesting
-            field_path = key.replace("-", "_")
-            # Store with dot notation for nested fields
-            field_overrides[field_path] = value
+            # Store with dot notation for nested fields (key already has correct format)
+            field_overrides[key] = value
 
         return config_variant, group_selections, field_overrides

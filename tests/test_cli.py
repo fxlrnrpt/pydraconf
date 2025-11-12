@@ -120,15 +120,34 @@ class TestConfigCLIParser:
         assert overrides["top"] == 200
         assert overrides["nested.inner"] == 10  # Stored with dot notation
 
-    def test_kebab_case_conversion(self, registry):
-        """Test that underscored fields accept kebab-case."""
+    def test_underscore_field_names(self, registry):
+        """Test that underscored fields use exact field names."""
 
         class ConfigWithUnderscores(BaseModel):
             batch_size: int = 32
             learning_rate: float = 0.001
 
         parser = ConfigCLIParser(ConfigWithUnderscores, registry)
-        variant, groups, overrides = parser.parse(["--batch-size=64", "--learning-rate=0.01"])
+        variant, groups, overrides = parser.parse(["--batch_size=64", "--learning_rate=0.01"])
 
         assert overrides["batch_size"] == 64
         assert overrides["learning_rate"] == 0.01
+
+    def test_parse_group_selection_with_class_names(self, registry):
+        """Test parsing group selection using class names."""
+
+        class SmallModelConfig(BaseModel):
+            size: int = 100
+
+        class LargeModelConfig(BaseModel):
+            size: int = 1000
+
+        registry.register_group("model", "SmallModelConfig", SmallModelConfig)
+        registry.register_group("model", "LargeModelConfig", LargeModelConfig)
+
+        parser = ConfigCLIParser(SimpleConfig, registry)
+        variant, groups, overrides = parser.parse(["model=SmallModelConfig"])
+
+        assert variant is None
+        assert groups == {"model": "SmallModelConfig"}
+        assert overrides == {}

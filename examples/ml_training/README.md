@@ -3,8 +3,8 @@
 This example demonstrates all three override mechanisms in PydraConf:
 
 1. **Subclassing** - Named variants (QuickTest, FullTraining)
-2. **Config Groups** - Component swapping (model=vit, optimizer=adam)
-3. **CLI Overrides** - Runtime tweaks (--epochs, --batch-size)
+2. **Config Groups** - Component swapping using class names (model=ViTConfig, optimizer=AdamConfig)
+3. **CLI Overrides** - Runtime tweaks (--epochs, --batch_size)
 
 This example uses `.pydraconfrc` to specify the config directory, so the decorator doesn't need a `config_dir` argument.
 
@@ -13,31 +13,31 @@ This example uses `.pydraconfrc` to specify the config directory, so the decorat
 ### Basic training with config groups
 ```bash
 # ResNet50 with Adam optimizer
-python train.py model=resnet50 optimizer=adam
+python train.py model=ResNet50Config optimizer=AdamConfig
 
 # ViT with SGD optimizer
-python train.py model=vit optimizer=sgd
+python train.py model=ViTConfig optimizer=SGDConfig
 ```
 
 ### Using variants (subclassing)
 ```bash
 # Quick test run (5 epochs, batch_size=8)
-python train.py --config=quick-test model=vit optimizer=adam
+python train.py --config=QuickTest model=ViTConfig optimizer=AdamConfig
 
 # Full training (200 epochs, batch_size=64)
-python train.py --config=full-training model=resnet50 optimizer=sgd
+python train.py --config=FullTraining model=ResNet50Config optimizer=SGDConfig
 ```
 
 ### CLI overrides
 ```bash
 # Override specific fields
-python train.py model=vit optimizer=adam --epochs=50 --batch-size=128 --seed=123
+python train.py model=ViTConfig optimizer=AdamConfig --epochs=50 --batch_size=128 --seed=123
 ```
 
 ### Combining all three
 ```bash
 # Variant + Groups + Field overrides
-python train.py --config=quick-test model=vit optimizer=adam --epochs=10 --batch-size=16
+python train.py --config=QuickTest model=ViTConfig optimizer=AdamConfig --epochs=10 --batch_size=16
 
 # This demonstrates the override priority:
 # 1. Start with QuickTest variant (epochs=5, batch_size=8)
@@ -48,16 +48,16 @@ python train.py --config=quick-test model=vit optimizer=adam --epochs=10 --batch
 ## Available Configs
 
 ### Models (model=X)
-- `resnet50`: ResNet50 model
-- `vit`: Vision Transformer
+- `ResNet50Config`: ResNet50 model
+- `ViTConfig`: Vision Transformer
 
 ### Optimizers (optimizer=X)
-- `adam`: Adam optimizer
-- `sgd`: SGD optimizer with momentum
+- `AdamConfig`: Adam optimizer
+- `SGDConfig`: SGD optimizer with momentum
 
 ### Variants (--config=X)
-- `quick-test`: 5 epochs, batch_size=8
-- `full-training`: 200 epochs, batch_size=64
+- `QuickTest`: 5 epochs, batch_size=8
+- `FullTraining`: 200 epochs, batch_size=64
 
 Run with `--help` to see all available options:
 ```bash
@@ -77,7 +77,7 @@ When combining all three mechanisms, the priority is (from lowest to highest):
 
 Example:
 ```bash
-python train.py --config=quick-test model=vit optimizer=adam --epochs=10
+python train.py --config=QuickTest model=ViTConfig optimizer=AdamConfig --epochs=10
 ```
 Results in:
 - epochs=10 (CLI override)

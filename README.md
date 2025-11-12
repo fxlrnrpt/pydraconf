@@ -53,13 +53,13 @@ Run with different configurations:
 python train.py
 
 # Use QuickTest variant
-python train.py --config=quick-test
+python train.py --config=QuickTest
 
 # Override specific fields
-python train.py --epochs=50 --batch-size=64
+python train.py --epochs=50 --batch_size=64
 
 # Combine all three
-python train.py --config=quick-test --epochs=10
+python train.py --config=QuickTest --epochs=10
 ```
 
 ## How It Works
@@ -81,14 +81,14 @@ class Production(TrainConfig):
     batch_size: int = 128
 ```
 
-Use with `--config=variant-name`:
+Use with `--config=ClassName`:
 
 ```bash
-python train.py --config=quick-test  # Uses QuickTest
-python train.py --config=production   # Uses Production
+python train.py --config=QuickTest   # Uses QuickTest
+python train.py --config=Production  # Uses Production
 ```
 
-Variant names are automatically converted to kebab-case (QuickTest → quick-test).
+Variant names use the exact class name.
 
 ### 2. Config Groups - Component Swapping
 
@@ -98,11 +98,11 @@ Organize configs in subdirectories to create swappable components:
 configs/
 ├── base.py           # Main config
 ├── model/
-│   ├── resnet50.py   # model=resnet50
-│   └── vit.py        # model=vit
+│   ├── resnet50.py   # Contains ResNet50Config class
+│   └── vit.py        # Contains ViTConfig class
 └── optimizer/
-    ├── adam.py       # optimizer=adam
-    └── sgd.py        # optimizer=sgd
+    ├── adam.py       # Contains AdamConfig class
+    └── sgd.py        # Contains SGDConfig class
 ```
 
 ```python
@@ -118,10 +118,10 @@ class ViTConfig(BaseModel):
     num_heads: int = 12
 ```
 
-Swap components at runtime:
+Swap components at runtime using class names:
 
 ```bash
-python train.py model=vit optimizer=sgd
+python train.py model=ViTConfig optimizer=SGDConfig
 ```
 
 ### 3. CLI Overrides - Runtime Tweaks
@@ -129,10 +129,10 @@ python train.py model=vit optimizer=sgd
 Override any field from the command line:
 
 ```bash
-python train.py --epochs=50 --model.hidden-dim=1024
+python train.py --epochs=50 --model.hidden_dim=1024
 ```
 
-Field names with underscores accept kebab-case (`batch_size` → `--batch-size`).
+Use exact field names including underscores (e.g., `batch_size` → `--batch_size`).
 
 ### Override Priority
 
@@ -146,12 +146,12 @@ When all three mechanisms are combined, priority is (from lowest to highest):
 Example:
 
 ```bash
-python train.py --config=quick-test model=vit --epochs=10
+python train.py --config=quick-test model=ViTConfig --epochs=10
 ```
 
 Results in:
 - `epochs=10` (CLI override, highest priority)
-- `model=ViT(...)` (config group selection)
+- `model=ViTConfig(...)` (config group selection)
 - Other fields from QuickTest variant defaults
 
 ## Configuration Directory
@@ -314,12 +314,12 @@ registry = ConfigRegistry()
 registry.discover(Path("configs"))
 
 # List available options
-print(registry.list_variants())  # ["quick-test", "production"]
-print(registry.list_groups())    # {"model": ["resnet50", "vit"], ...}
+print(registry.list_variants())  # ["QuickTest", "Production"]
+print(registry.list_groups())    # {"model": ["ResNet50Config", "ViTConfig"], ...}
 
 # Get specific configs
-variant_cls = registry.get_variant("quick-test")
-model_cls = registry.get_group("model", "vit")
+variant_cls = registry.get_variant("QuickTest")
+model_cls = registry.get_group("model", "ViTConfig")
 ```
 
 ## Development

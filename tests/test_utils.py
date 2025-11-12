@@ -2,42 +2,7 @@
 
 import pytest
 
-from pydraconf.utils import camel_to_kebab, get_nested_value, kebab_to_snake, set_nested_value
-
-
-class TestCamelToKebab:
-    """Tests for camel_to_kebab function."""
-
-    def test_simple_camel_case(self):
-        """Test simple CamelCase conversion."""
-        assert camel_to_kebab("QuickTest") == "quick-test"
-        assert camel_to_kebab("DevConfig") == "dev-config"
-
-    def test_multiple_capitals(self):
-        """Test multiple consecutive capitals."""
-        assert camel_to_kebab("MLTrainingConfig") == "ml-training-config"
-        assert camel_to_kebab("HTTPServer") == "http-server"
-
-    def test_single_word(self):
-        """Test single word."""
-        assert camel_to_kebab("Config") == "config"
-
-    def test_already_lowercase(self):
-        """Test already lowercase string."""
-        assert camel_to_kebab("config") == "config"
-
-
-class TestKebabToSnake:
-    """Tests for kebab_to_snake function."""
-
-    def test_basic_conversion(self):
-        """Test basic kebab to snake conversion."""
-        assert kebab_to_snake("hidden-dim") == "hidden_dim"
-        assert kebab_to_snake("pool-size") == "pool_size"
-
-    def test_no_hyphens(self):
-        """Test string without hyphens."""
-        assert kebab_to_snake("config") == "config"
+from pydraconf.utils import get_nested_value, set_nested_value
 
 
 class TestSetNestedValue:

@@ -9,14 +9,12 @@ from typing import Any, Type
 
 from pydantic import BaseModel
 
-from .utils import camel_to_kebab
-
 
 class ConfigRegistry:
     """Registry for configuration classes and variants.
 
     Manages two types of configs:
-    1. Groups: Configs organized in subdirectories (e.g., configs/model/resnet.py)
+    1. Groups: Configs organized in subdirectories, identified by class name (e.g., configs/model/resnet.py with ResNet50Config class)
     2. Variants: Named config subclasses (e.g., class QuickTest(BaseConfig))
     """
 
@@ -29,8 +27,8 @@ class ConfigRegistry:
         """Discover and register configs from directory.
 
         Discovery rules:
-        - Files in subdirectories become config groups (model/resnet.py → group="model", name="resnet")
-        - Subclasses of other configs become variants (QuickTest(BaseConfig) → variant="quick-test")
+        - Files in subdirectories become config groups (model/resnet.py with ResNet50Config → group="model", name="ResNet50Config")
+        - Subclasses of other configs become variants (QuickTest(BaseConfig) → variant="QuickTest")
 
         Args:
             root_dir: Root directory to scan for configs
@@ -56,20 +54,19 @@ class ConfigRegistry:
                 # Check if it's in a subdirectory (config group)
                 if py_file.parent != root_dir:
                     group = py_file.parent.name
-                    config_name = py_file.stem
+                    config_name = obj.__name__
                     self.register_group(group, config_name, obj)
 
                 # Check if it's a variant (subclasses another config)
                 if self._is_variant(obj):
-                    variant_name = camel_to_kebab(obj.__name__)
-                    self.register_variant(variant_name, obj)
+                    self.register_variant(obj.__name__, obj)
 
     def register_group(self, group: str, name: str, cls: Type[BaseModel]) -> None:
-        """Register a config class in a group.
+        """Register a config class in a group by class name.
 
         Args:
             group: Group name (e.g., "model", "optimizer")
-            name: Config name within group (e.g., "resnet", "vit")
+            name: Config class name (e.g., "ResNet50Config", "ViTConfig")
             cls: Config class
         """
         if group not in self._groups:
@@ -80,7 +77,7 @@ class ConfigRegistry:
         """Register a named config variant.
 
         Args:
-            name: Variant name (kebab-case)
+            name: Variant name (class name)
             cls: Config class
         """
         self._variants[name] = cls
@@ -109,7 +106,7 @@ class ConfigRegistry:
         """Get a named config variant.
 
         Args:
-            name: Variant name (kebab-case)
+            name: Variant name (class name)
 
         Returns:
             Config class
