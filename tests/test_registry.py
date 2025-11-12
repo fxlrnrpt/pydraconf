@@ -156,7 +156,7 @@ class MainConfig(BaseModel):
 
         # Write a file with multiple model config classes that inherit from ModelConfig
         variants_file = config_dir / "variants.py"
-        variants_file.write_text('''
+        variants_file.write_text("""
 from base import ModelConfig
 
 class SmallModel(ModelConfig):
@@ -170,12 +170,13 @@ class MediumModel(ModelConfig):
 class LargeModel(ModelConfig):
     hidden_dim: int = 1024
     layers: int = 16
-''')
+""")
 
         # Need to import MainConfig to pass to discover
         import sys
+
         sys.path.insert(0, str(config_dir))
-        from base import MainConfig
+        from base import MainConfig  # pyright: ignore[reportMissingImports]
 
         # Discover configs
         registry.discover(config_dir, MainConfig)

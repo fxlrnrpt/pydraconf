@@ -1,7 +1,6 @@
 """Tests for the provide_config decorator."""
 
 import sys
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -161,7 +160,7 @@ class TestProvideConfigDecorator:
         """Test that non-BaseModel type annotation raises TypeError."""
         with pytest.raises(TypeError, match="must be a Pydantic BaseModel"):
 
-            @provide_config(config_dirs=str(tmp_path))
+            @provide_config(config_dirs=str(tmp_path))  # pyright: ignore[reportArgumentType]
             def my_func(cfg: int):  # Not a BaseModel
                 return cfg
 

@@ -9,7 +9,7 @@ repos:
         types: [python]
       - id: basedpyright
         name: basedpyright
-        entry: basedpyright
+        entry: uv run basedpyright
         language: system
         types: [python]
         pass_filenames: false
