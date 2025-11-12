@@ -368,7 +368,7 @@ Decorator to make a function config-driven. The config class is automatically in
 
 ```python
 @with_config(
-    config_cls: Type[BaseModel] | None = None,  # Optional explicit config class
+    config_cls: Type[PydraConfig] | None = None,  # Optional explicit config class
     config_dirs: str | list[str] | None = None   # Directory or directories to scan
 )
 def my_function(cfg: ConfigClass):
