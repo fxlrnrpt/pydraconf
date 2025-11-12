@@ -3,16 +3,18 @@
 from pydantic import BaseModel, Field
 
 
-# Import default configs - we'll use BaseModel as placeholder type
-# The actual type will be determined at runtime through config groups
+# Base config types for groups (with sane defaults)
 class ModelConfig(BaseModel):
-    """Base model config placeholder."""
-    pass
+    """Base model config type."""
+
+    hidden_dim: int = Field(default=512, description="Hidden dimension size")
+    num_layers: int = Field(default=6, description="Number of layers")
 
 
 class OptimizerConfig(BaseModel):
-    """Base optimizer config placeholder."""
-    pass
+    """Base optimizer config type."""
+
+    lr: float = Field(default=0.001, description="Learning rate")
 
 
 class TrainConfig(BaseModel):
@@ -20,8 +22,8 @@ class TrainConfig(BaseModel):
 
     epochs: int = Field(default=100, description="Number of training epochs")
     batch_size: int = Field(default=32, description="Training batch size")
-    model: BaseModel = Field(default_factory=ModelConfig, description="Model configuration")
-    optimizer: BaseModel = Field(default_factory=OptimizerConfig, description="Optimizer configuration")
+    model: ModelConfig = Field(default_factory=ModelConfig, description="Model configuration")
+    optimizer: OptimizerConfig = Field(default_factory=OptimizerConfig, description="Optimizer configuration")
     seed: int = Field(default=42, description="Random seed")
 
 

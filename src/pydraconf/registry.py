@@ -23,18 +23,22 @@ class ConfigRegistry:
         self._groups: dict[str, dict[str, Type[BaseModel]]] = {}
         self._variants: dict[str, Type[BaseModel]] = {}
 
-    def discover(self, root_dir: Path) -> None:
+    def discover(self, root_dir: Path, main_config_cls: Type[BaseModel]) -> None:
         """Discover and register configs from directory.
 
         Discovery rules:
-        - Files in subdirectories become config groups (model/resnet.py with ResNet50Config → group="model", name="ResNet50Config")
-        - Subclasses of other configs become variants (QuickTest(BaseConfig) → variant="QuickTest")
+        - Subclasses of main_config_cls become variants (QuickTest(TrainConfig) → variant="QuickTest")
+        - Subclasses of nested field types become groups (ResNet50Config(ModelConfig) → group="model", name="ResNet50Config")
 
         Args:
             root_dir: Root directory to scan for configs
+            main_config_cls: The main config class (e.g., TrainConfig from train function parameter)
         """
         if not root_dir.exists():
             return
+
+        # Get nested field types from main config to identify groups
+        nested_field_types = self._get_nested_field_types(main_config_cls)
 
         for py_file in root_dir.rglob("*.py"):
             # Skip private modules
@@ -51,15 +55,14 @@ class ConfigRegistry:
                 if not self._is_config_class(obj):
                     continue
 
-                # Check if it's in a subdirectory (config group)
-                if py_file.parent != root_dir:
-                    group = py_file.parent.name
-                    config_name = obj.__name__
-                    self.register_group(group, config_name, obj)
-
-                # Check if it's a variant (subclasses another config)
-                if self._is_variant(obj):
+                # Check if it's a variant (direct subclass of main config)
+                if self._is_variant_of(obj, main_config_cls):
                     self.register_variant(obj.__name__, obj)
+
+                # Check if it's a group config (subclass of nested field type)
+                for field_name, field_type in nested_field_types.items():
+                    if self._is_variant_of(obj, field_type) and obj is not field_type:
+                        self.register_group(field_name, obj.__name__, obj)
 
     def register_group(self, group: str, name: str, cls: Type[BaseModel]) -> None:
         """Register a config class in a group by class name.
@@ -211,16 +214,31 @@ class ConfigRegistry:
         """
         return inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel
 
-    def _is_variant(self, cls: Type[BaseModel]) -> bool:
-        """Check if config class is a variant (subclasses another config).
+    def _get_nested_field_types(self, config_cls: Type[BaseModel]) -> dict[str, Type[BaseModel]]:
+        """Extract nested BaseModel field types from a config class.
+
+        Args:
+            config_cls: Config class to extract field types from
+
+        Returns:
+            Dictionary mapping field names to their BaseModel types
+        """
+        nested_types = {}
+        for field_name, field_info in config_cls.model_fields.items():
+            field_type = field_info.annotation
+            # Check if it's a BaseModel subclass (but not BaseModel itself)
+            if isinstance(field_type, type) and issubclass(field_type, BaseModel) and field_type is not BaseModel:
+                nested_types[field_name] = field_type
+        return nested_types
+
+    def _is_variant_of(self, cls: Type[BaseModel], parent_cls: Type[BaseModel]) -> bool:
+        """Check if a config class is a direct subclass of parent_cls.
 
         Args:
             cls: Config class to check
+            parent_cls: Parent class to check against
 
         Returns:
-            True if cls subclasses another config (not just BaseModel)
+            True if cls is a direct subclass of parent_cls
         """
-        for base in cls.__bases__:
-            if base is not BaseModel and inspect.isclass(base) and issubclass(base, BaseModel):
-                return True
-        return False
+        return parent_cls in cls.__bases__

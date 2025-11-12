@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 from pydraconf.cli import ConfigCLIParser
 from pydraconf.decorators import _build_config
 from pydraconf.registry import ConfigRegistry
-from tests.test_registry import SmallModelConfig
+from tests.fixtures.configs.base import BaseConfig
+from tests.fixtures.configs.model.small import SmallModelConfig
 
 
 class ModelConfig(BaseModel):
@@ -50,7 +51,7 @@ class TestIntegration:
     def registry(self, fixtures_path):
         """Create and populate registry."""
         reg = ConfigRegistry()
-        reg.discover(fixtures_path)
+        reg.discover(fixtures_path, BaseConfig)
         return reg
 
     def test_base_config_only(self, registry):
@@ -78,8 +79,8 @@ class TestIntegration:
         # Model should be swapped to SmallModelConfig
         assert config.model.__class__.__name__ == "SmallModelConfig"
         assert isinstance(config.model, SmallModelConfig)
-        assert config.model.size == 100
-        assert config.model.layers == 2
+        assert config.model.size == 50  # SmallModelConfig overrides base
+        assert config.model.layers == 1
 
     def test_field_overrides(self, registry):
         """Test building config with field overrides."""
@@ -120,7 +121,7 @@ class TestIntegration:
 
         # Base: epochs=100
         # Variant (QuickTest): epochs=5
-        # Group: model=SmallModelConfig (size=100, layers=2)
+        # Group: model=SmallModelConfig (size=50, layers=1)
         # CLI: epochs=15, model.layers=5
 
         config = cast(
@@ -134,7 +135,7 @@ class TestIntegration:
         assert config.model.__class__.__name__ == "SmallModelConfig"
 
         # model.size from group default
-        assert config.model.size == 100
+        assert config.model.size == 50  # SmallModelConfig overrides base
 
         # model.layers from CLI override
         assert config.model.layers == 5  # pyright: ignore[reportAttributeAccessIssue]

@@ -2,16 +2,20 @@
 
 from pydantic import BaseModel, Field
 
+from tests.fixtures.configs.model.base import BaseModelConfig
 
+
+# Main test configuration
 class BaseConfig(BaseModel):
     """Base test configuration."""
 
     value: int = Field(default=10, description="A test value")
     name: str = Field(default="base", description="Config name")
+    model: BaseModelConfig = Field(default_factory=BaseModelConfig, description="Model configuration")
 
 
 class ChildConfig(BaseConfig):
-    """Child test configuration."""
+    """Child test configuration (variant of BaseConfig)."""
 
     value: int = 20
     name: str = "child"

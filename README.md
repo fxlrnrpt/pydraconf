@@ -6,8 +6,8 @@ Python-native hierarchical configuration management with Pydantic. Like Hydra, b
 
 Three powerful override mechanisms work together:
 
-1. **Subclassing** - Named variants through Python inheritance (e.g., `QuickTest(BaseConfig)`)
-2. **Config Groups** - Component swapping via directory structure (e.g., `model=vit`)
+1. **Variants** - Named configurations through inheritance (e.g., `QuickTest(TrainConfig)`)
+2. **Groups** - Component swapping via type inheritance (e.g., `model=ViTConfig`)
 3. **CLI Overrides** - Runtime field tweaks (e.g., `--epochs=50`)
 
 Benefits:
@@ -15,7 +15,7 @@ Benefits:
 - Type-safe with Pydantic validation
 - IDE autocomplete and refactoring support
 - Simple `@provide_config` decorator
-- Convention-over-configuration design
+- Type-driven architecture - groups are defined by class inheritance, not directory structure
 
 ## Installation
 
@@ -66,9 +66,9 @@ python train.py --config=QuickTest --epochs=10
 
 ## How It Works
 
-### 1. Subclassing - Named Variants
+### 1. Variants - Named Configurations
 
-Create named configuration variants by subclassing:
+Create named configuration variants by **subclassing your main config**:
 
 ```python
 class TrainConfig(BaseModel):
@@ -90,40 +90,95 @@ python train.py --config=QuickTest   # Uses QuickTest
 python train.py --config=Production  # Uses Production
 ```
 
-Variant names use the exact class name.
+**How it works:** PydraConf discovers all direct subclasses of your main config class (the one used in your `train` function) and registers them as variants.
 
-### 2. Config Groups - Component Swapping
+### 2. Groups - Component Swapping
 
-Organize configs in subdirectories to create swappable components:
-
-```
-configs/
-├── base.py           # Main config
-├── model/
-│   ├── resnet50.py   # Contains ResNet50Config class
-│   └── vit.py        # Contains ViTConfig class
-└── optimizer/
-    ├── adam.py       # Contains AdamConfig class
-    └── sgd.py        # Contains SGDConfig class
-```
+Create swappable components by **defining base types for nested fields**:
 
 ```python
 # base.py
+class ModelConfig(BaseModel):
+    """Base type for model configs with sane defaults."""
+    hidden_dim: int = 512
+    num_layers: int = 6
+
+class OptimizerConfig(BaseModel):
+    """Base type for optimizer configs with sane defaults."""
+    lr: float = 0.001
+
 class TrainConfig(BaseModel):
     epochs: int = 100
-    model: ModelConfig = Field(default_factory=ResNet50Config)
-    optimizer: OptimizerConfig = Field(default_factory=AdamConfig)
+    model: ModelConfig = Field(default_factory=ModelConfig)
+    optimizer: OptimizerConfig = Field(default_factory=OptimizerConfig)
 
 # model/vit.py
-class ViTConfig(BaseModel):
-    hidden_dim: int = 768
+class ViTConfig(ModelConfig):
+    hidden_dim: int = 768  # Override base
     num_heads: int = 12
+    num_layers: int = 12  # Override base
+
+# model/resnet50.py
+class ResNet50Config(ModelConfig):
+    hidden_dim: int = 2048  # Override base
+    num_layers: int = 50  # Override base
+    pretrained: bool = True
+
+# optimizer/adam.py
+class AdamConfig(OptimizerConfig):
+    # Inherits lr=0.001 from base
+    beta1: float = 0.9
+    beta2: float = 0.999
 ```
 
 Swap components at runtime using class names:
 
 ```bash
-python train.py model=ViTConfig optimizer=SGDConfig
+python train.py model=ViTConfig optimizer=AdamConfig
+```
+
+**How it works:** PydraConf identifies groups by examining the types of nested fields in your main config. Any class that inherits from a nested field's type becomes part of that field's group. The field name becomes the group name.
+
+**Complete Example:**
+
+```python
+# configs/base.py
+from pydantic import BaseModel, Field
+
+# Define base types for groups with sane defaults
+class ModelConfig(BaseModel):
+    hidden_dim: int = 512
+    num_layers: int = 6
+
+class OptimizerConfig(BaseModel):
+    lr: float = 0.001
+
+# Main config
+class TrainConfig(BaseModel):
+    epochs: int = 100
+    model: ModelConfig = Field(default_factory=ModelConfig)
+    optimizer: OptimizerConfig = Field(default_factory=OptimizerConfig)
+
+# Variants (subclass main config)
+class QuickTest(TrainConfig):
+    epochs: int = 5
+
+# configs/model/vit.py
+class ViTConfig(ModelConfig):  # Inherits from ModelConfig -> goes in "model" group
+    hidden_dim: int = 768  # Override base
+    num_heads: int = 12
+    num_layers: int = 12  # Override base
+
+# configs/optimizer/adam.py
+class AdamConfig(OptimizerConfig):  # Inherits from OptimizerConfig -> goes in "optimizer" group
+    # Inherits lr=0.001 from base
+    beta1: float = 0.9
+```
+
+Now you can swap components by type:
+
+```bash
+python train.py model=ViTConfig optimizer=AdamConfig
 ```
 
 ### 3. CLI Overrides - Runtime Tweaks
@@ -312,7 +367,7 @@ Low-level API for config discovery and management (optional, advanced usage).
 from pydraconf import ConfigRegistry
 
 registry = ConfigRegistry()
-registry.discover(Path("configs"))
+registry.discover(Path("configs"), TrainConfig)  # Pass main config class
 
 # List available options
 print(registry.list_variants())  # ["QuickTest", "Production"]
@@ -322,6 +377,12 @@ print(registry.list_groups())    # {"model": ["ResNet50Config", "ViTConfig"], ..
 variant_cls = registry.get_variant("QuickTest")
 model_cls = registry.get_group("model", "ViTConfig")
 ```
+
+**Key points:**
+
+- `discover()` requires the main config class to identify variants and groups
+- **Variants** are direct subclasses of the main config
+- **Groups** are subclasses of nested field types in the main config
 
 ## Development
 

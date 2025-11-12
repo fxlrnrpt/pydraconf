@@ -1,9 +1,11 @@
 """Large model config for testing."""
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from tests.fixtures.configs.model.base import BaseModelConfig
 
 
-class LargeModelConfig(BaseModel):
+class LargeModelConfig(BaseModelConfig):
     """Large model configuration."""
 
     size: int = Field(default=1000, description="Model size")

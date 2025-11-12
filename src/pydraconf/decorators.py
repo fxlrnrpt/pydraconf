@@ -200,7 +200,7 @@ def provide_config(
             registry = ConfigRegistry()
             for config_path in resolved_paths:
                 if config_path.exists():
-                    registry.discover(config_path)
+                    registry.discover(config_path, config_cls)
 
             # 2. Parse CLI
             parser = ConfigCLIParser(config_cls, registry)

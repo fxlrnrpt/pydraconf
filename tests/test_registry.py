@@ -7,7 +7,7 @@ import pytest
 from pydantic import BaseModel
 
 from pydraconf.registry import ConfigRegistry
-from tests.fixtures.configs.base import ChildConfig
+from tests.fixtures.configs.base import BaseConfig, ChildConfig, ComplexConfig
 from tests.fixtures.configs.model.small import SmallModelConfig
 
 
@@ -30,17 +30,27 @@ class TestConfigRegistry:
         assert registry.list_variants() == []
 
     def test_discover_variants(self, registry, fixtures_path):
-        """Test discovering variant configs (subclasses)."""
-        registry.discover(fixtures_path)
+        """Test discovering variant configs (subclasses of main config)."""
+        # BaseConfig is the main config - should find its direct subclasses
+        registry.discover(fixtures_path, BaseConfig)
         variants = registry.list_variants()
 
-        # Should find ChildConfig and ComplexVariant
+        # Should find ChildConfig (direct subclass of BaseConfig)
         assert "ChildConfig" in variants
-        assert "ComplexVariant" in variants
+        # ComplexVariant is a subclass of ComplexConfig, not BaseConfig
+        assert "ComplexVariant" not in variants
+
+        # If we use ComplexConfig as main, should find ComplexVariant
+        registry2 = ConfigRegistry()
+        registry2.discover(fixtures_path, ComplexConfig)
+        variants2 = registry2.list_variants()
+        assert "ComplexVariant" in variants2
 
     def test_discover_groups(self, registry, fixtures_path):
-        """Test discovering config groups (subdirectories)."""
-        registry.discover(fixtures_path)
+        """Test discovering config groups (subclasses of nested field types)."""
+        # BaseConfig has a 'model' field of type ModelConfig
+        # SmallModelConfig and LargeModelConfig are subclasses of ModelConfig
+        registry.discover(fixtures_path, BaseConfig)
         groups = registry.list_groups()
 
         assert "model" in groups
@@ -49,7 +59,7 @@ class TestConfigRegistry:
 
     def test_get_variant(self, registry, fixtures_path):
         """Test retrieving a variant config."""
-        registry.discover(fixtures_path)
+        registry.discover(fixtures_path, BaseConfig)
         variant_cls = registry.get_variant("ChildConfig")
 
         assert variant_cls is not None
@@ -62,7 +72,7 @@ class TestConfigRegistry:
 
     def test_get_group(self, registry, fixtures_path):
         """Test retrieving a config from a group."""
-        registry.discover(fixtures_path)
+        registry.discover(fixtures_path, BaseConfig)
         model_cls = registry.get_group("model", "SmallModelConfig")
 
         assert model_cls is not None
@@ -70,24 +80,24 @@ class TestConfigRegistry:
 
         # Test instantiation
         instance = cast(SmallModelConfig, model_cls())
-        assert instance.size == 100
-        assert instance.layers == 2
+        assert instance.size == 50  # SmallModelConfig overrides base default
+        assert instance.layers == 1
 
     def test_get_nonexistent_variant(self, registry: ConfigRegistry, fixtures_path: Path):
         """Test getting non-existent variant raises KeyError."""
-        registry.discover(fixtures_path)
+        registry.discover(fixtures_path, BaseConfig)
         with pytest.raises(KeyError, match="Config variant 'nonexistent' not found"):
             registry.get_variant("nonexistent")
 
     def test_get_nonexistent_group(self, registry: ConfigRegistry, fixtures_path: Path):
         """Test getting non-existent group raises KeyError."""
-        registry.discover(fixtures_path)
+        registry.discover(fixtures_path, BaseConfig)
         with pytest.raises(KeyError, match="Config group 'nonexistent' not found"):
             registry.get_group("nonexistent", "small")
 
     def test_get_nonexistent_config_in_group(self, registry: ConfigRegistry, fixtures_path: Path):
         """Test getting non-existent config in existing group raises KeyError."""
-        registry.discover(fixtures_path)
+        registry.discover(fixtures_path, BaseConfig)
         with pytest.raises(KeyError, match="Config 'nonexistent' not found in group 'model'"):
             registry.get_group("model", "nonexistent")
 
@@ -120,7 +130,7 @@ class TestConfigRegistry:
 
     def test_discover_nonexistent_directory(self, registry):
         """Test discovering from non-existent directory doesn't crash."""
-        registry.discover(Path("/nonexistent/path"))
+        registry.discover(Path("/nonexistent/path"), BaseConfig)
         assert registry.list_groups() == {}
         assert registry.list_variants() == []
 
@@ -128,29 +138,47 @@ class TestConfigRegistry:
         """Test discovering multiple config classes from a single file."""
         # Create a config directory with one file containing multiple classes
         config_dir = tmp_path / "configs"
-        model_dir = config_dir / "model"
-        model_dir.mkdir(parents=True)
+        config_dir.mkdir(parents=True)
 
-        # Write a file with multiple config classes
-        variants_file = model_dir / "variants.py"
+        # Write base config with ModelConfig field type
+        base_file = config_dir / "base.py"
+        base_file.write_text('''
+from pydantic import BaseModel, Field
+
+class ModelConfig(BaseModel):
+    """Base model config type."""
+    pass
+
+class MainConfig(BaseModel):
+    """Main configuration."""
+    model: ModelConfig = Field(default_factory=ModelConfig)
+''')
+
+        # Write a file with multiple model config classes that inherit from ModelConfig
+        variants_file = config_dir / "variants.py"
         variants_file.write_text('''
-from pydantic import BaseModel
+from base import ModelConfig
 
-class SmallModel(BaseModel):
+class SmallModel(ModelConfig):
     hidden_dim: int = 256
     layers: int = 4
 
-class MediumModel(BaseModel):
+class MediumModel(ModelConfig):
     hidden_dim: int = 512
     layers: int = 8
 
-class LargeModel(BaseModel):
+class LargeModel(ModelConfig):
     hidden_dim: int = 1024
     layers: int = 16
 ''')
 
+        # Need to import MainConfig to pass to discover
+        import sys
+        sys.path.insert(0, str(config_dir))
+        from base import MainConfig
+
         # Discover configs
-        registry.discover(config_dir)
+        registry.discover(config_dir, MainConfig)
         groups = registry.list_groups()
 
         # All three classes should be registered in the "model" group
@@ -176,3 +204,6 @@ class LargeModel(BaseModel):
         large_instance = large()
         assert large_instance.hidden_dim == 1024
         assert large_instance.layers == 16
+
+        # Clean up sys.path
+        sys.path.remove(str(config_dir))
