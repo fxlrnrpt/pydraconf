@@ -18,8 +18,6 @@ Example:
     @with_config(config_dirs="configs")
     def train(cfg: TrainConfig):
         print(f"Training for {cfg.epochs} epochs")
-
-    # CLI: python train.py --config=quick-test --epochs=10
 """
 
 from .base_config import PydraConfig

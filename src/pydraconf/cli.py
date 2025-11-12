@@ -40,6 +40,7 @@ class ConfigCLIParser:
         """Build argument parser with all config options."""
         # Add --config for variant selection
         variants = self.registry.list_variants()
+
         if variants:
             self.parser.add_argument(
                 "--config",

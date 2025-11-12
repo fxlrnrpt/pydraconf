@@ -148,6 +148,22 @@ class ConfigRegistry:
         Returns:
             Imported module or None if import fails
         """
+        # First check if any module in sys.modules already points to this file
+        # This ensures we reuse existing imports and avoid duplicate class objects
+        try:
+            file_path_resolved = py_file.resolve()
+            for module_name, module in list(sys.modules.items()):
+                if module is None:
+                    continue
+                try:
+                    module_file = getattr(module, "__file__", None)
+                    if module_file and Path(module_file).resolve() == file_path_resolved:
+                        return module
+                except (OSError, ValueError):
+                    continue
+        except OSError:
+            pass
+
         # Try to import module via the canonical Python module name so that
         # discovered classes match existing imports (avoids duplicate types).
         module_name = self._derive_module_name(py_file)

@@ -113,26 +113,36 @@ def train_prod(cfg: TrainConfig) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  python train.py train [--config=VARIANT] [OPTIONS]")
-        print("  python train.py train-dev [OPTIONS]")
-        print("  python train.py train-prod [OPTIONS]")
-        print("\nExamples:")
-        print("  python train.py train")
-        print("  python train.py train --config=QuickTest")
-        print("  python train.py train model=ViTConfig optimizer=AdamConfig")
-        print("  python train.py train --config=QuickTest model=TinyModel --epochs=3")
-        print("  python train.py train-dev")
-        print("  python train.py train-dev model=SmallModel --epochs=10")
-        print("  python train.py train-prod model=ResNet50Config optimizer=AdamConfig")
-        print("\nFor more help:")
-        print("  python train.py train --help")
-        sys.exit(1)
+    # Determine which entry point to use
+    # Support both: "python train.py --config=X" and "python train.py train --config=X"
+    command = "train"  # Default to standard train
 
-    # Remove the command from argv before calling the function
-    command = sys.argv[1]
-    sys.argv = [sys.argv[0]] + sys.argv[2:]
+    if len(sys.argv) >= 2:
+        first_arg = sys.argv[1]
+        # Check if first arg is a recognized subcommand
+        if first_arg in ("train", "train-dev", "train-prod"):
+            command = first_arg
+            # Remove the command from argv
+            sys.argv = [sys.argv[0]] + sys.argv[2:]
+        elif first_arg in ("--help", "-h"):
+            print("Usage:")
+            print("  python train.py [COMMAND] [OPTIONS]")
+            print("\nCommands:")
+            print("  train      Standard training (default, flexible)")
+            print("  train-dev  Development mode (always QuickTest)")
+            print("  train-prod Production mode (always FullTraining)")
+            print("\nExamples:")
+            print("  python train.py --config=QuickTest")
+            print("  python train.py model=ViTConfig optimizer=AdamConfig")
+            print("  python train.py train --config=QuickTest model=TinyModel --epochs=3")
+            print("  python train.py train-dev")
+            print("  python train.py train-dev model=SmallModel --epochs=10")
+            print("  python train.py train-prod model=ResNet50Config optimizer=AdamConfig")
+            print("\nFor PydraConf options:")
+            print("  python train.py --help")
+            sys.exit(0)
+        # Otherwise, treat it as a flag/option for default train command
+        # No need to modify sys.argv
 
     if command == "train":
         train()
@@ -140,7 +150,3 @@ if __name__ == "__main__":
         train_dev()
     elif command == "train-prod":
         train_prod()
-    else:
-        print(f"Unknown command: {command}")
-        print("Available commands: train, train-dev, train-prod")
-        sys.exit(1)
