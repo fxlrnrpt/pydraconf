@@ -177,7 +177,7 @@ class LargeModel(ModelConfig):
         import sys
 
         sys.path.insert(0, str(config_dir))
-        from base import MainConfig  # pyright: ignore[reportMissingImports]
+        from base import MainConfig  # pyrefly: ignore[missing-import]
 
         # Discover configs
         registry.discover(config_dir, MainConfig)

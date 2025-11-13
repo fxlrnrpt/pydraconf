@@ -6,7 +6,7 @@ from pathlib import Path
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from shared_configs.base import TrainConfig
+from shared_configs.base import TrainConfig  # pyrefly: ignore[missing-import]
 
 from pydraconf import with_config
 

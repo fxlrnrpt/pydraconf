@@ -265,7 +265,7 @@ def with_config(
             )
 
             # 5. Call user function
-            return func(config)  # pyright: ignore[reportArgumentType]
+            return func(config) # pyrefly: ignore[bad-argument-type]
 
         return wrapper
 

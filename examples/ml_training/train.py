@@ -27,7 +27,7 @@ from pathlib import Path
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from configs.base import FullTraining, QuickTest, TrainConfig
+from configs.base import FullTraining, QuickTest, TrainConfig # pyrefly: ignore[missing-import]
 
 from pydraconf import with_config
 

@@ -1,8 +1,7 @@
 """Adam optimizer configuration."""
 
+from configs.base import OptimizerConfig  # pyrefly: ignore[missing-import]
 from pydantic import Field
-
-from configs.base import OptimizerConfig
 
 
 class AdamConfig(OptimizerConfig):

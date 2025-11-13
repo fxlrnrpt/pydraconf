@@ -7,9 +7,9 @@ repos:
         args: ["check", "--force-exclude", "--fix"]
         language: system
         types: [python]
-      - id: basedpyright
-        name: basedpyright
-        entry: uv run basedpyright
+      - id: pyrefly
+        name: pyrefly
+        entry: uv run pyrefly check
         language: system
         types: [python]
         pass_filenames: false

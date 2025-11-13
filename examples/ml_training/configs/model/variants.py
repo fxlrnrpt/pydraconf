@@ -1,8 +1,7 @@
 """Model configuration variants - demonstrating multiple classes in one file."""
 
+from configs.base import ModelConfig  # pyrefly: ignore[missing-import]
 from pydantic import Field
-
-from configs.base import ModelConfig
 
 
 class TinyModel(ModelConfig):
